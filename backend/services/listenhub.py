@@ -82,19 +82,40 @@ class ListenHubService:
         speaker_id: str = DEFAULT_SPEAKER_ID
     ) -> Optional[Dict]:
         """
-        Generate speech for a single piece of text.
-        
-        Args:
-            text: The text to convert to speech
-            speaker_id: The speaker/voice ID to use
-            
-        Returns:
-            Dict with audio_url, duration, or None if failed
+        Generate speech for a single piece of text with language optimization.
         """
+        from utils.lang_detector import detect_language
+        
+        # Detect language
+        lang = detect_language(text)
+        
+        # Mapping for language-optimized speakers
+        # Key is the 'base' name or ID prefix.
+        # This map ensures that if user selected "Keke-1", 
+        # but the text is English, we use "keke-2" (EN version).
+        SPEAKER_MAP = {
+            "keke-1": {"zh": "keke-1", "en": "voice-clone-692f06fb62d62af721a56bb0"}, # 克克-2 is EN
+            "voice-clone-692f06fb62d62af721a56bb0": {"zh": "keke-1", "en": "voice-clone-692f06fb62d62af721a56bb0"},
+            "Mia": {"zh": "keke-1", "en": "travel-girl-english"},
+            "Arthur": {"zh": "keke-1", "en": "Arthur"},
+            "Leo": {"zh": "keke-1", "en": "leo-9328b6d2"},
+        }
+        
+        # Determine optimized speaker ID
+        optimized_speaker_id = speaker_id
+        if speaker_id in SPEAKER_MAP:
+            optimized_speaker_id = SPEAKER_MAP[speaker_id].get(lang, speaker_id)
+        elif lang == "en" and not any(x in speaker_id.lower() for x in ["en", "english", "clone"]):
+            # Fallback for other generic Chinese speakers: use a standard English speaker for English text
+            optimized_speaker_id = "travel-girl-english" # Mia
+        elif lang == "zh" and not any(x in speaker_id.lower() for x in ["zh", "chinese", "keke"]):
+             # Fallback for English speakers: use Keke-1 for Chinese text
+            optimized_speaker_id = "keke-1"
+
         url = f"{self.base_url}/speech"
         payload = {
             "scripts": [
-                {"content": text, "speakerId": speaker_id}
+                {"content": text, "speakerId": optimized_speaker_id}
             ]
         }
         

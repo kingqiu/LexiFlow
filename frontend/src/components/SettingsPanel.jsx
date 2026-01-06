@@ -39,6 +39,9 @@ function SettingsPanel({
                             </option>
                         ))}
                     </select>
+                    <p style={{ marginTop: '8px', fontSize: '0.75rem', color: '#64748b' }}>
+                        💡 系统将根据内容自动匹配地道的中/英文配音。
+                    </p>
                 </div>
 
                 {/* Repeat Count */}
