@@ -212,7 +212,7 @@ function App() {
                     <span style={{ color: '#3b82f6' }}>exi</span>
                     Flow
                 </h1>
-                <p>解说万物，一键生成听写音频</p>
+                <p>万物皆可听，一键生成听写音频</p>
             </header>
 
             {/* Main Content */}
