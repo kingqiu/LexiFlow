@@ -14,7 +14,7 @@ LISTENHUB_API_KEY = os.getenv("LISTENHUB_API_KEY", "")
 LISTENHUB_BASE_URL = os.getenv("LISTENHUB_BASE_URL", "https://api.marswave.ai/openapi/v1")
 
 # Default speaker if none specified
-DEFAULT_SPEAKER_ID = "keke-1"
+DEFAULT_SPEAKER_ID = "voice-clone-692f06bf2855dbc00c29a9c6"
 DEFAULT_SPEAKER_NAME = "克克-1"
 
 # Retry configuration
@@ -94,11 +94,11 @@ class ListenHubService:
         # This map ensures that if user selected "Keke-1", 
         # but the text is English, we use "keke-2" (EN version).
         SPEAKER_MAP = {
-            "keke-1": {"zh": "keke-1", "en": "voice-clone-692f06fb62d62af721a56bb0"}, # 克克-2 is EN
-            "voice-clone-692f06fb62d62af721a56bb0": {"zh": "keke-1", "en": "voice-clone-692f06fb62d62af721a56bb0"},
-            "Mia": {"zh": "keke-1", "en": "travel-girl-english"},
-            "Arthur": {"zh": "keke-1", "en": "Arthur"},
-            "Leo": {"zh": "keke-1", "en": "leo-9328b6d2"},
+            "voice-clone-692f06bf2855dbc00c29a9c6": {"zh": "voice-clone-692f06bf2855dbc00c29a9c6", "en": "voice-clone-692f06fb62d62af721a56bb0"}, # 克克-2 is EN
+            "voice-clone-692f06fb62d62af721a56bb0": {"zh": "voice-clone-692f06bf2855dbc00c29a9c6", "en": "voice-clone-692f06fb62d62af721a56bb0"},
+            "travel-girl-english": {"zh": "voice-clone-692f06bf2855dbc00c29a9c6", "en": "travel-girl-english"},
+            "Arthur": {"zh": "voice-clone-692f06bf2855dbc00c29a9c6", "en": "Arthur"},
+            "leo-9328b6d2": {"zh": "voice-clone-692f06bf2855dbc00c29a9c6", "en": "leo-9328b6d2"},
         }
         
         # Determine optimized speaker ID
@@ -108,9 +108,9 @@ class ListenHubService:
         elif lang == "en" and not any(x in speaker_id.lower() for x in ["en", "english", "clone"]):
             # Fallback for other generic Chinese speakers: use a standard English speaker for English text
             optimized_speaker_id = "travel-girl-english" # Mia
-        elif lang == "zh" and not any(x in speaker_id.lower() for x in ["zh", "chinese", "keke"]):
+        elif lang == "zh" and not any(x in speaker_id.lower() for x in ["zh", "chinese", "clone"]):
              # Fallback for English speakers: use Keke-1 for Chinese text
-            optimized_speaker_id = "keke-1"
+            optimized_speaker_id = "voice-clone-692f06bf2855dbc00c29a9c6"
 
         url = f"{self.base_url}/speech"
         payload = {
