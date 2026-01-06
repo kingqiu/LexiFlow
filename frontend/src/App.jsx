@@ -4,7 +4,7 @@ import SettingsPanel from './components/SettingsPanel';
 import AudioPlayer from './components/AudioPlayer';
 import History from './components/History';
 
-const API_BASE = 'http://localhost:8000/api';
+const API_BASE = `http://${window.location.hostname}:8000/api`;
 
 function App() {
     // Word list state
