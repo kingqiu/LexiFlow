@@ -18,19 +18,19 @@ venv/
 env/
 .venv/
 
+# OS files
+.DS_Store
+Thumbs.db
+
 # Project specific
 backend/data/audio/*
 !backend/data/audio/.gitkeep
 backend/data/history.json
+backend/data/wordbooks.json
+backend/data/shares.json
 OutputAudios/*
 !OutputAudios/.gitkeep
 
-# Logs
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# OS files
-.DS_Store
-Thumbs.db
+# PIDs
+.pids/
+.agent/

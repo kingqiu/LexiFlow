@@ -2,6 +2,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import WordInput from './components/WordInput';
 import SettingsPanel from './components/SettingsPanel';
 import AudioPlayer from './components/AudioPlayer';
+import ShareModal from './components/ShareModal';
+import WordBook from './components/WordBook';
 import History from './components/History';
 
 const API_BASE = `http://${window.location.hostname}:8000/api`;
@@ -32,10 +34,20 @@ function App() {
     // Confirmation modal
     const [showConfirmModal, setShowConfirmModal] = useState(false);
 
+    // Word Book state
+    const [wordbooks, setWordbooks] = useState([]);
+    const [showSaveToBookModal, setShowSaveToBookModal] = useState(false);
+    const [saveToBookWords, setSaveToBookWords] = useState([]);
+
+    // Share state
+    const [showShareModal, setShowShareModal] = useState(false);
+    const [shareUrl, setShareUrl] = useState('');
+
     // Fetch speakers on mount
     useEffect(() => {
         fetchSpeakers();
         fetchHistory();
+        fetchWordBooks();
     }, []);
 
     const fetchSpeakers = async () => {
@@ -59,6 +71,117 @@ function App() {
             setHistory(data.records || []);
         } catch (err) {
             console.error('Failed to fetch history:', err);
+        }
+    };
+
+    // Word Book API methods
+    const fetchWordBooks = async () => {
+        try {
+            const response = await fetch(`${API_BASE}/wordbooks`);
+            const data = await response.json();
+            setWordbooks(data.books || []);
+        } catch (err) {
+            console.error('Failed to fetch wordbooks:', err);
+        }
+    };
+
+    const handleCreateWordBook = async (name) => {
+        try {
+            await fetch(`${API_BASE}/wordbooks`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name }),
+            });
+            fetchWordBooks();
+        } catch (err) {
+            console.error('Failed to create wordbook:', err);
+        }
+    };
+
+    const handleDeleteWordBook = async (bookId) => {
+        try {
+            await fetch(`${API_BASE}/wordbooks/${bookId}`, { method: 'DELETE' });
+            fetchWordBooks();
+        } catch (err) {
+            console.error('Failed to delete wordbook:', err);
+        }
+    };
+
+    const handleUpdateWordBook = async (bookId, updates) => {
+        try {
+            await fetch(`${API_BASE}/wordbooks/${bookId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(updates),
+            });
+            fetchWordBooks();
+        } catch (err) {
+            console.error('Failed to update wordbook:', err);
+        }
+    };
+
+    const handleUseWordBook = (book) => {
+        const wordText = book.words.join('\n');
+        handleTextChange(wordText);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    const handleSaveToWordBook = async (bookId, words) => {
+        try {
+            await fetch(`${API_BASE}/wordbooks/${bookId}/words`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'add', words }),
+            });
+            fetchWordBooks();
+            setShowSaveToBookModal(false);
+            setSaveToBookWords([]);
+        } catch (err) {
+            console.error('Failed to save to wordbook:', err);
+        }
+    };
+
+    const handleSaveToNewBook = async (bookName, words) => {
+        try {
+            await fetch(`${API_BASE}/wordbooks`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: bookName, words }),
+            });
+            fetchWordBooks();
+            setShowSaveToBookModal(false);
+            setSaveToBookWords([]);
+        } catch (err) {
+            console.error('Failed to create wordbook with words:', err);
+        }
+    };
+
+    const handleOpenSaveToBook = (words) => {
+        setSaveToBookWords(words);
+        setShowSaveToBookModal(true);
+    };
+
+    // Share handler
+    const handleShare = async () => {
+        if (!generatedAudio) return;
+        try {
+            const response = await fetch(`${API_BASE}/share`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    audio_filename: generatedAudio.filename,
+                    words: words,
+                    speaker_name: selectedSpeaker?.name || '',
+                    repeat_count: repeatCount,
+                    interval_seconds: intervalSeconds,
+                }),
+            });
+            const data = await response.json();
+            setShareUrl(data.share_url);
+            setShowShareModal(true);
+        } catch (err) {
+            console.error('Failed to create share:', err);
+            alert('创建分享链接失败，请重试');
         }
     };
 
@@ -119,7 +242,7 @@ function App() {
         }
     };
 
-    // Generate speech
+    // Generate speech with real-time streaming updates
     const handleGenerate = async (confirmed = false) => {
         if (!words.length) {
             setError('请输入至少一个单词');
@@ -128,6 +251,8 @@ function App() {
 
         setError(null);
         setIsGenerating(true);
+        setGeneratedAudio(null);
+        setGenerationResult(null);
 
         try {
             const response = await fetch(`${API_BASE}/generate`, {
@@ -250,13 +375,23 @@ function App() {
                         audioUrl={generatedAudio.url}
                         filename={generatedAudio.filename}
                         result={generationResult}
+                        onShare={handleShare}
                     />
                 )}
+
+                <WordBook
+                    books={wordbooks}
+                    onUseBook={handleUseWordBook}
+                    onCreateBook={handleCreateWordBook}
+                    onDeleteBook={handleDeleteWordBook}
+                    onUpdateBook={handleUpdateWordBook}
+                />
 
                 <History
                     records={history}
                     onPlay={handlePlayHistory}
                     onDelete={handleDeleteHistory}
+                    onSaveToBook={handleOpenSaveToBook}
                 />
             </main>
 
@@ -287,6 +422,108 @@ function App() {
                     </div>
                 </div>
             )}
+
+            {/* Save to Word Book Modal */}
+            {showSaveToBookModal && (
+                <SaveToBookModal
+                    words={saveToBookWords}
+                    books={wordbooks}
+                    onSaveToExisting={handleSaveToWordBook}
+                    onSaveToNew={handleSaveToNewBook}
+                    onClose={() => { setShowSaveToBookModal(false); setSaveToBookWords([]); }}
+                />
+            )}
+
+            {/* Share Modal */}
+            {showShareModal && generatedAudio && (
+                <ShareModal
+                    shareUrl={shareUrl}
+                    audioUrl={generatedAudio.url}
+                    filename={generatedAudio.filename}
+                    onClose={() => setShowShareModal(false)}
+                />
+            )}
+        </div>
+    );
+}
+
+// SaveToBookModal sub-component
+function SaveToBookModal({ words, books, onSaveToExisting, onSaveToNew, onClose }) {
+    const [mode, setMode] = useState(books.length > 0 ? 'existing' : 'new');
+    const [selectedBookId, setSelectedBookId] = useState(books.length > 0 ? books[0].id : '');
+    const [newBookName, setNewBookName] = useState('');
+
+    const handleSave = () => {
+        if (mode === 'existing' && selectedBookId) {
+            onSaveToExisting(selectedBookId, words);
+        } else if (mode === 'new' && newBookName.trim()) {
+            onSaveToNew(newBookName.trim(), words);
+        }
+    };
+
+    return (
+        <div className="modal-overlay" onClick={onClose}>
+            <div className="modal-content" onClick={e => e.stopPropagation()}>
+                <h3 className="modal-title">📌 存入单词本</h3>
+                <div className="modal-body">
+                    <p style={{ marginBottom: '16px', color: '#64748b', fontSize: '0.9rem' }}>
+                        将 <strong>{words.length}</strong> 个单词存入单词本
+                    </p>
+
+                    <div className="save-to-book-tabs">
+                        {books.length > 0 && (
+                            <button
+                                className={`tab-item ${mode === 'existing' ? 'active' : ''}`}
+                                onClick={() => setMode('existing')}
+                            >
+                                已有单词本
+                            </button>
+                        )}
+                        <button
+                            className={`tab-item ${mode === 'new' ? 'active' : ''}`}
+                            onClick={() => setMode('new')}
+                        >
+                            新建单词本
+                        </button>
+                    </div>
+
+                    {mode === 'existing' ? (
+                        <select
+                            className="clean-select"
+                            value={selectedBookId}
+                            onChange={e => setSelectedBookId(e.target.value)}
+                            style={{ marginTop: '12px' }}
+                        >
+                            {books.map(book => (
+                                <option key={book.id} value={book.id}>
+                                    {book.name} ({book.word_count} 个单词)
+                                </option>
+                            ))}
+                        </select>
+                    ) : (
+                        <input
+                            className="wordbook-create-input"
+                            type="text"
+                            placeholder="输入新单词本名称"
+                            value={newBookName}
+                            onChange={e => setNewBookName(e.target.value)}
+                            onKeyDown={e => { if (e.key === 'Enter') handleSave(); }}
+                            autoFocus
+                            style={{ marginTop: '12px' }}
+                        />
+                    )}
+                </div>
+                <div className="modal-actions">
+                    <button className="modal-btn cancel" onClick={onClose}>取消</button>
+                    <button
+                        className="modal-btn confirm"
+                        onClick={handleSave}
+                        disabled={mode === 'new' ? !newBookName.trim() : !selectedBookId}
+                    >
+                        存入
+                    </button>
+                </div>
+            </div>
         </div>
     );
 }

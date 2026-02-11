@@ -3,12 +3,14 @@ LexiFlow - FastAPI Main Application
 REST API for word-to-speech generation with ListenHub integration.
 """
 import os
+import socket
 import tempfile
 from pathlib import Path
 from typing import List, Optional
-from fastapi import FastAPI, HTTPException, UploadFile, File, Form
+from urllib.parse import urlparse
+from fastapi import FastAPI, HTTPException, UploadFile, File, Form, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse, JSONResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from dotenv import load_dotenv
@@ -16,6 +18,8 @@ from dotenv import load_dotenv
 from services.listenhub import listenhub_service, DEFAULT_SPEAKER_ID, DEFAULT_SPEAKER_NAME
 from services.audio_processor import audio_processor, AUDIO_DIR
 from services.history import history_service
+from services.wordbook import wordbook_service
+from services.share import share_service
 from utils.text_parser import parse_word_list, validate_word_list
 
 load_dotenv()
@@ -65,6 +69,31 @@ class ParseResponse(BaseModel):
     language: str
     is_large: bool
     warning: Optional[str] = None
+
+
+class WordBookCreate(BaseModel):
+    name: str
+    words: List[str] = []
+    description: str = ""
+
+
+class WordBookUpdate(BaseModel):
+    name: Optional[str] = None
+    words: Optional[List[str]] = None
+    description: Optional[str] = None
+
+
+class WordBookWordsAction(BaseModel):
+    action: str  # "add" or "remove"
+    words: List[str]
+
+
+class ShareCreate(BaseModel):
+    audio_filename: str
+    words: List[str] = []
+    speaker_name: str = ""
+    repeat_count: int = 1
+    interval_seconds: float = 3.0
 
 
 # === API Endpoints ===
@@ -273,19 +302,21 @@ async def generate_speech(request: GenerateRequest):
 
 
 @app.get("/api/audio/{filename}")
-async def get_audio(filename: str):
-    """Serve generated audio file."""
+async def get_audio(filename: str, download: int = 0):
+    """Serve generated audio file. Use ?download=1 to force download."""
     file_path = AUDIO_DIR / filename
     
     if not file_path.exists():
         raise HTTPException(status_code=404, detail="Audio file not found")
+    
+    disposition = "attachment" if download else "inline"
     
     return FileResponse(
         path=file_path,
         media_type="audio/mpeg",
         filename=filename,
         headers={
-            "Content-Disposition": f'attachment; filename="{filename}"',
+            "Content-Disposition": f'{disposition}; filename="{filename}"',
             "Cache-Control": "no-cache, no-store, must-revalidate"
         }
     )
@@ -305,6 +336,201 @@ async def delete_history_record(record_id: int):
     if not success:
         raise HTTPException(status_code=404, detail="Record not found")
     return {"success": True}
+
+
+# === Word Book Endpoints ===
+
+@app.post("/api/wordbooks")
+async def create_wordbook(request: WordBookCreate):
+    """Create a new word book."""
+    if not request.name.strip():
+        raise HTTPException(status_code=400, detail="单词本名称不能为空")
+    book = wordbook_service.create_book(
+        name=request.name.strip(),
+        words=request.words,
+        description=request.description
+    )
+    return book
+
+
+@app.get("/api/wordbooks")
+async def get_wordbooks():
+    """Get all word books."""
+    books = wordbook_service.get_books()
+    return {"books": books}
+
+
+@app.get("/api/wordbooks/{book_id}")
+async def get_wordbook(book_id: str):
+    """Get a specific word book."""
+    book = wordbook_service.get_book(book_id)
+    if not book:
+        raise HTTPException(status_code=404, detail="单词本未找到")
+    return book
+
+
+@app.put("/api/wordbooks/{book_id}")
+async def update_wordbook(book_id: str, request: WordBookUpdate):
+    """Update a word book."""
+    book = wordbook_service.update_book(
+        book_id=book_id,
+        name=request.name,
+        words=request.words,
+        description=request.description
+    )
+    if not book:
+        raise HTTPException(status_code=404, detail="单词本未找到")
+    return book
+
+
+@app.delete("/api/wordbooks/{book_id}")
+async def delete_wordbook(book_id: str):
+    """Delete a word book."""
+    success = wordbook_service.delete_book(book_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="单词本未找到")
+    return {"success": True}
+
+
+@app.post("/api/wordbooks/{book_id}/words")
+async def modify_wordbook_words(book_id: str, request: WordBookWordsAction):
+    """Add or remove words from a word book."""
+    if request.action == "add":
+        book = wordbook_service.add_words(book_id, request.words)
+    elif request.action == "remove":
+        book = wordbook_service.remove_words(book_id, request.words)
+    else:
+        raise HTTPException(status_code=400, detail="action 必须为 'add' 或 'remove'")
+    
+    if not book:
+        raise HTTPException(status_code=404, detail="单词本未找到")
+    return book
+
+
+# === Share Endpoints ===
+
+# Template directory
+TEMPLATE_DIR = Path(__file__).parent / "templates"
+
+
+def _get_lan_ip() -> str:
+    """Get the machine's LAN IP address for shareable URLs."""
+    try:
+        # UDP connect trick — doesn't actually send data, just resolves local IP
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("8.8.8.8", 80))
+        ip = s.getsockname()[0]
+        s.close()
+        return ip
+    except Exception:
+        return "127.0.0.1"
+
+@app.post("/api/share")
+async def create_share(request: ShareCreate, req: Request):
+    """Create a shareable link for audio."""
+    # Verify the audio file exists
+    file_path = AUDIO_DIR / request.audio_filename
+    if not file_path.exists():
+        raise HTTPException(status_code=404, detail="音频文件不存在")
+
+    share = share_service.create_share(
+        audio_filename=request.audio_filename,
+        words=request.words,
+        speaker_name=request.speaker_name,
+        repeat_count=request.repeat_count,
+        interval_seconds=request.interval_seconds,
+    )
+
+    # Build share URL — replace localhost with LAN IP for mobile access
+    base_url = str(req.base_url).rstrip("/")
+    parsed = urlparse(base_url)
+    if parsed.hostname in ("localhost", "127.0.0.1"):
+        lan_ip = _get_lan_ip()
+        base_url = f"{parsed.scheme}://{lan_ip}:{parsed.port}"
+    share_url = f"{base_url}/share/{share['id']}"
+
+    return {
+        "share_id": share["id"],
+        "share_url": share_url,
+        "expires_at": share["expires_at"],
+    }
+
+
+@app.get("/share/{share_id}")
+async def share_page(share_id: str, req: Request):
+    """Render the standalone share page."""
+    share = share_service.get_share(share_id)
+
+    # Load template
+    template_path = TEMPLATE_DIR / "share_page.html"
+    template = template_path.read_text(encoding="utf-8")
+
+    if not share:
+        # Expired or not found
+        expired_content = """
+        <div class="expired-container">
+            <div class="icon">⏰</div>
+            <h2>分享已过期</h2>
+            <p>该音频分享链接已过期或不存在。</p>
+        </div>
+        """
+        html = template.format(content=expired_content, word_count=0)
+        return HTMLResponse(content=html)
+
+    # Increment view count
+    share_service.increment_view(share_id)
+
+    # Build audio URL
+    base_url = str(req.base_url).rstrip("/")
+    audio_url = f"{base_url}/api/audio/{share['audio_filename']}"
+    download_url = f"{audio_url}?download=1"
+
+    # Build word tags HTML
+    word_tags = "".join(
+        f'<span class="word-tag">{word}</span>' for word in share.get("words", [])
+    )
+
+    # Build the page content
+    content = f"""
+    <div class="share-brand">
+        <h1>🎧 LexiFlow</h1>
+        <p>听写音频分享</p>
+    </div>
+
+    <div class="audio-section">
+        <audio controls preload="metadata" style="width: 100%;">
+            <source src="{audio_url}" type="audio/mpeg">
+            您的浏览器不支持音频播放。
+        </audio>
+    </div>
+
+    <div class="word-list">
+        <div class="word-list-title">单词列表</div>
+        <div class="word-tags">{word_tags}</div>
+    </div>
+
+    <div class="meta-info">
+        <span>🎙 {share.get('speaker_name', '未知')}</span>
+        <span class="dot"></span>
+        <span>每词 {share.get('repeat_count', 1)} 遍</span>
+        <span class="dot"></span>
+        <span>共 {share.get('word_count', 0)} 个单词</span>
+    </div>
+
+    <div class="actions">
+        <a href="{download_url}" class="btn btn-primary" download>📥 下载音频</a>
+    </div>
+
+    <div class="footer">
+        <p>由 <a href="/">LexiFlow</a> 生成 · 有效期 7 天</p>
+    </div>
+    """
+
+    html = template.format(
+        content=content,
+        word_count=share.get("word_count", 0),
+    )
+    return HTMLResponse(content=html)
 
 
 # === Run Server ===

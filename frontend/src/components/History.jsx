@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 
-function History({ records, onPlay, onDelete }) {
+function History({ records, onPlay, onDelete, onSaveToBook }) {
+    const [hoveredCard, setHoveredCard] = useState(null);
+
     const formatDate = (isoString) => {
         const date = new Date(isoString);
         return date.toLocaleDateString('zh-CN', {
@@ -26,7 +28,7 @@ function History({ records, onPlay, onDelete }) {
             {records.length === 0 ? (
                 <div className="card empty-state">
                     <div className="icon">🥡</div>
-                    <p>暂无生成记录，快去创作一段音频吧</p>
+                    <p>暂无生成记录,快去创作一段音频吧</p>
                 </div>
             ) : (
                 <div className="history-grid">
@@ -34,8 +36,20 @@ function History({ records, onPlay, onDelete }) {
                         <div key={record.id} className="history-card">
                             <div className="history-card-top">
                                 <div className="history-info">
-                                    <div className="history-title" title={record.words?.join(', ')}>
+                                    <div
+                                        className="history-title"
+                                        style={{ position: 'relative' }}
+                                        onMouseEnter={() => setHoveredCard(record.id)}
+                                        onMouseLeave={() => setHoveredCard(null)}
+                                    >
                                         {formatWords(record.words)}
+                                        {hoveredCard === record.id && record.words && record.words.length > 0 && (
+                                            <div className="word-tooltip">
+                                                <div className="tooltip-content">
+                                                    {record.words.join(', ')}
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
                                     <div className="history-date">
                                         {formatDate(record.timestamp)} · {record.speaker_name}
@@ -52,12 +66,21 @@ function History({ records, onPlay, onDelete }) {
 
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto' }}>
                                 <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>{record.word_count}个单词</span>
-                                <button
-                                    style={{ background: 'none', border: 'none', color: '#ef4444', fontSize: '0.75rem', cursor: 'pointer', opacity: 0.6 }}
-                                    onClick={() => onDelete(record.id)}
-                                >
-                                    删除
-                                </button>
+                                <div style={{ display: 'flex', gap: '12px' }}>
+                                    <button
+                                        style={{ background: 'none', border: 'none', color: '#3b82f6', fontSize: '0.75rem', cursor: 'pointer', opacity: 0.8 }}
+                                        onClick={() => onSaveToBook(record.words)}
+                                        title="存入单词本"
+                                    >
+                                        📌 存入单词本
+                                    </button>
+                                    <button
+                                        style={{ background: 'none', border: 'none', color: '#ef4444', fontSize: '0.75rem', cursor: 'pointer', opacity: 0.6 }}
+                                        onClick={() => onDelete(record.id)}
+                                    >
+                                        删除
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     ))}
