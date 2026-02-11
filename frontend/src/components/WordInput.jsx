@@ -54,10 +54,14 @@ function WordInput({ text, onTextChange, onFileUpload, wordCount, isLarge, warni
                 onDrop={handleDrop}
             >
                 <textarea
+                    id="word_input"
+                    name="word_input"
                     className="word-textarea"
                     value={text}
                     onChange={(e) => onTextChange(e.target.value)}
-                    placeholder="向 LexiFlow 输入您要听写的单词或短语，以回车或逗号分隔..."
+                    placeholder="向 LexiFlow 输入您要听写的单词或短语，以回车或逗号分隔…"
+                    autoComplete="off"
+                    spellCheck="false"
                 />
 
                 <div className="input-bottom-bar">

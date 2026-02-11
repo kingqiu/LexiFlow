@@ -4,6 +4,7 @@ Manages generation history stored in local JSON file.
 """
 import json
 import os
+import uuid
 from datetime import datetime
 from typing import List, Dict, Optional
 from pathlib import Path
@@ -61,7 +62,7 @@ class HistoryService:
         history = self._load_history()
         
         record = {
-            "id": len(history) + 1,
+            "id": uuid.uuid4().hex,
             "timestamp": datetime.now().isoformat(),
             "words": words,
             "word_count": len(words),

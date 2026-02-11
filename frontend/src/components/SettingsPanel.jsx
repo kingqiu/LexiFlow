@@ -86,7 +86,7 @@ function SettingsPanel({
                 {isGenerating ? (
                     <>
                         <span className="spinner-white"></span>
-                        正在努力生成中...
+                        正在努力生成中…
                     </>
                 ) : (
                     <>

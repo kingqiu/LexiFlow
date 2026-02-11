@@ -161,7 +161,18 @@ body {
     line-height: 1.6;
     resize: none;
     min-height: 150px;
-    outline: none;
+    outline: 2px solid transparent;
+}
+
+.word-textarea:focus-visible,
+.clean-select:focus-visible,
+.tab-item:focus-visible,
+.create-btn:focus-visible,
+.action-btn:focus-visible,
+.history-card:focus-visible,
+.share-copy-btn:focus-visible {
+    outline: 2px solid var(--color-primary) !important;
+    outline-offset: 2px !important;
 }
 
 /* Upload & Bottom Bar */
@@ -240,7 +251,7 @@ body {
     font-weight: 600;
     color: var(--text-secondary);
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
     text-align: center;
 }
 
@@ -269,7 +280,7 @@ body {
 }
 
 .clean-select:focus {
-    outline: none;
+    outline: 2px solid transparent;
     background-color: #ffffff;
     border-color: #e5e7eb;
 }
@@ -518,7 +529,7 @@ body {
     font-weight: 600;
     color: var(--text-secondary);
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: background-color 0.2s ease, color 0.2s ease, transform 0.1s ease;
 }
 
 .wordbook-add-btn:hover {
@@ -585,7 +596,7 @@ body {
     border-radius: 8px;
     font-size: 1rem;
     font-weight: 600;
-    outline: none;
+    outline: 2px solid transparent;
     font-family: inherit;
 }
 
@@ -672,7 +683,7 @@ body {
     border-radius: 50%;
     line-height: 1;
     padding: 0;
-    transition: all 0.15s ease;
+    transition: background-color 0.15s ease, opacity 0.15s ease, transform 0.15s ease;
 }
 
 .word-tag-remove:hover {
@@ -797,7 +808,7 @@ body {
     font-size: 0.95rem;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: background-color 0.2s ease, transform 0.1s ease, box-shadow 0.2s ease;
     border: none;
     font-family: inherit;
 }
@@ -862,7 +873,7 @@ body {
     font-size: 0.85rem;
     color: var(--text-primary);
     font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
-    outline: none;
+    outline: 2px solid transparent;
     min-width: 0;
 }
 
@@ -880,7 +891,7 @@ body {
     font-weight: 600;
     cursor: pointer;
     white-space: nowrap;
-    transition: all 0.2s ease;
+    transition: background-color 0.2s ease, transform 0.1s ease, box-shadow 0.2s ease;
     font-family: inherit;
 }
 

@@ -367,7 +367,11 @@ function App() {
                 />
 
                 {error && (
-                    <div className="status-message error" style={{ background: '#fee2e2', color: '#dc2626', border: '1px solid #fecaca', borderRadius: '12px', textAlign: 'center' }}>
+                    <div
+                        className="status-message error"
+                        style={{ background: '#fee2e2', color: '#dc2626', border: '1px solid #fecaca', borderRadius: '12px', textAlign: 'center' }}
+                        role="alert"
+                    >
                         ❌ {error}
                     </div>
                 )}
@@ -411,12 +415,14 @@ function App() {
                             <button
                                 className="modal-btn cancel"
                                 onClick={() => setShowConfirmModal(false)}
+                                aria-label="取消生成"
                             >
                                 取消
                             </button>
                             <button
                                 className="modal-btn confirm"
                                 onClick={handleConfirm}
+                                aria-label="确认并生成音频"
                             >
                                 确认生成
                             </button>
@@ -506,21 +512,21 @@ function SaveToBookModal({ words, books, onSaveToExisting, onSaveToNew, onClose 
                         <input
                             className="wordbook-create-input"
                             type="text"
-                            placeholder="输入新单词本名称"
+                            placeholder="输入新单词本名称…"
                             value={newBookName}
                             onChange={e => setNewBookName(e.target.value)}
                             onKeyDown={e => { if (e.key === 'Enter') handleSave(); }}
-                            autoFocus
                             style={{ marginTop: '12px' }}
                         />
                     )}
                 </div>
                 <div className="modal-actions">
-                    <button className="modal-btn cancel" onClick={onClose}>取消</button>
+                    <button className="modal-btn cancel" onClick={onClose} aria-label="关闭弹窗">取消</button>
                     <button
                         className="modal-btn confirm"
                         onClick={handleSave}
                         disabled={mode === 'new' ? !newBookName.trim() : !selectedBookId}
+                        aria-label="确认存入单词本"
                     >
                         存入
                     </button>

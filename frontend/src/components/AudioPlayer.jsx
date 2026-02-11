@@ -8,10 +8,20 @@ function AudioPlayer({ audioUrl, filename, result, onShare }) {
                     ✨ 生成成功
                 </div>
                 <div className="action-group">
-                    <button className="action-btn" onClick={onShare} style={{ gap: '6px' }}>
+                    <button
+                        className="action-btn"
+                        onClick={onShare}
+                        style={{ gap: '6px' }}
+                        aria-label="打开分享弹窗以分享此音频"
+                    >
                         🔗 分享音频
                     </button>
-                    <a href={audioUrl} className="action-btn" download={filename}>
+                    <a
+                        href={audioUrl}
+                        className="action-btn"
+                        download={filename}
+                        aria-label="下载此音频文件到本地"
+                    >
                         📥 下载音频
                     </a>
                 </div>
