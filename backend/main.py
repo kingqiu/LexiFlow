@@ -60,6 +60,7 @@ class GenerateResponse(BaseModel):
     success_count: int = 0
     failed_count: int = 0
     failed_words: List[str] = []
+    words: List[str] = []
     message: str = ""
 
 
@@ -297,6 +298,7 @@ async def generate_speech(request: GenerateRequest):
         success_count=success_count,
         failed_count=failed_count,
         failed_words=failed_words,
+        words=words,
         message=f"成功生成 {success_count}/{len(words)} 个单词的语音"
     )
 

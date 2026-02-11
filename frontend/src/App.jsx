@@ -170,7 +170,7 @@ function App() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     audio_filename: generatedAudio.filename,
-                    words: words,
+                    words: generationResult?.words || words,
                     speaker_name: selectedSpeaker?.name || '',
                     repeat_count: repeatCount,
                     interval_seconds: intervalSeconds,
@@ -286,6 +286,7 @@ function App() {
                     successCount: data.success_count,
                     failedCount: data.failed_count,
                     failedWords: data.failed_words,
+                    words: data.words || words, // Store the words used for this generation
                     message: data.message,
                 });
                 fetchHistory(); // Refresh history
@@ -324,6 +325,7 @@ function App() {
             successCount: record.success_count,
             failedCount: record.failed_count,
             failedWords: record.failed_words || [],
+            words: record.words || [], // Include words from history record
             message: `来自历史记录 - ${record.speaker_name}`,
         });
     };
