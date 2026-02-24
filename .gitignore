@@ -34,3 +34,4 @@ OutputAudios/*
 # PIDs
 .pids/
 .agent/
+lexiflow_migrate_*.tar.gz
