@@ -37,7 +37,7 @@ class InviteCodeManager:
         with open(INVITE_CODES_FILE, 'w', encoding='utf-8') as f:
             json.dump(data, f, ensure_ascii=False, indent=2)
 
-    def validate_code(self, code: str) -> tuple[bool, Optional[str]]:
+    def validate_code(self, code: str, device_id: Optional[str] = None) -> tuple[bool, Optional[str]]:
         """
         Validate invite code and check daily limit
         Returns: (is_valid, error_message)
@@ -46,6 +46,19 @@ class InviteCodeManager:
             return False, "邀请码无效"
 
         code_info = self.codes_data["codes"][code]
+
+        # Check device binding (one code per device)
+        bound_device = code_info.get("bound_device")
+        if bound_device:
+            # Already bound, check if it matches
+            if device_id != bound_device:
+                return False, "此邀请码已被其他设备使用"
+        elif device_id:
+            # First use, bind to this device
+            code_info["bound_device"] = device_id
+            code_info["bound_at"] = datetime.now().isoformat()
+            self._save_codes(self.codes_data)
+
         today = str(date.today())
 
         # Check daily usage

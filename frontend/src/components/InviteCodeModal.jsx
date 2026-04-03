@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { generateDeviceId } from '../utils/deviceId';
 
 const InviteCodeModal = ({ onCodeValidated }) => {
     const [code, setCode] = useState('');
@@ -21,8 +22,10 @@ const InviteCodeModal = ({ onCodeValidated }) => {
         setError('');
 
         try {
+            const deviceId = generateDeviceId();
             const formData = new FormData();
             formData.append('code', codeToValidate);
+            formData.append('device_id', deviceId);
 
             const response = await fetch(`${API_BASE}/validate-invite-code`, {
                 method: 'POST',
@@ -96,6 +99,7 @@ const InviteCodeModal = ({ onCodeValidated }) => {
                     <p>💡 提示：</p>
                     <ul>
                         <li>每个邀请码每天可生成 50 个单词</li>
+                        <li>每个邀请码只能绑定一台设备使用</li>
                         <li>换设备或清除缓存后需重新输入</li>
                     </ul>
                 </div>

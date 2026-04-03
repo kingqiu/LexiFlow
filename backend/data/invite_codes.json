@@ -4,7 +4,9 @@
       "created_at": "2026-04-03",
       "total_usage": 0,
       "daily_usage": {},
-      "last_used": null
+      "last_used": null,
+      "bound_device": "test_device_1",
+      "bound_at": "2026-04-03T11:53:07.570055"
     },
     "06GE5AGU": {
       "created_at": "2026-04-03",

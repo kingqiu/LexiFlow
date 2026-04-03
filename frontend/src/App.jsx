@@ -6,6 +6,7 @@ import ShareModal from './components/ShareModal';
 import WordBook from './components/WordBook';
 import History from './components/History';
 import InviteCodeModal from './components/InviteCodeModal';
+import { generateDeviceId } from './utils/deviceId';
 
 const API_BASE = import.meta.env.VITE_API_BASE || `http://${window.location.hostname}:8000/api`;
 
@@ -278,6 +279,7 @@ function App() {
                     interval_seconds: intervalSeconds,
                     confirmed: confirmed,
                     invite_code: inviteCode,
+                    device_id: generateDeviceId(),
                 }),
             });
 

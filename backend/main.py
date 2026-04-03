@@ -52,6 +52,7 @@ class GenerateRequest(BaseModel):
     interval_seconds: float = 3.0
     confirmed: bool = False  # User confirmed large file warning
     invite_code: str  # Required invite code
+    device_id: Optional[str] = None  # Device fingerprint for binding
 
 
 class GenerateResponse(BaseModel):
@@ -102,9 +103,9 @@ class ShareCreate(BaseModel):
 # === API Endpoints ===
 
 @app.post("/api/validate-invite-code")
-async def validate_invite_code(code: str = Form(...)):
+async def validate_invite_code(code: str = Form(...), device_id: str = Form(None)):
     """Validate an invite code and return remaining quota"""
-    is_valid, error_msg = invite_code_manager.validate_code(code)
+    is_valid, error_msg = invite_code_manager.validate_code(code, device_id=device_id)
 
     if not is_valid:
         raise HTTPException(status_code=400, detail=error_msg)
@@ -222,7 +223,7 @@ async def generate_speech(request: GenerateRequest):
     5. Records usage and saves to history
     """
     # Validate invite code
-    is_valid, error_msg = invite_code_manager.validate_code(request.invite_code)
+    is_valid, error_msg = invite_code_manager.validate_code(request.invite_code, device_id=request.device_id)
     if not is_valid:
         raise HTTPException(status_code=403, detail=error_msg)
 
