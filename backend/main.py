@@ -20,6 +20,7 @@ from services.audio_processor import audio_processor, AUDIO_DIR
 from services.history import history_service
 from services.wordbook import wordbook_service
 from services.share import share_service
+from services.invite_code import invite_code_manager
 from utils.text_parser import parse_word_list, validate_word_list
 
 load_dotenv()
@@ -50,6 +51,7 @@ class GenerateRequest(BaseModel):
     repeat_count: int = 1
     interval_seconds: float = 3.0
     confirmed: bool = False  # User confirmed large file warning
+    invite_code: str  # Required invite code
 
 
 class GenerateResponse(BaseModel):
@@ -98,6 +100,22 @@ class ShareCreate(BaseModel):
 
 
 # === API Endpoints ===
+
+@app.post("/api/validate-invite-code")
+async def validate_invite_code(code: str = Form(...)):
+    """Validate an invite code and return remaining quota"""
+    is_valid, error_msg = invite_code_manager.validate_code(code)
+
+    if not is_valid:
+        raise HTTPException(status_code=400, detail=error_msg)
+
+    remaining = invite_code_manager.get_remaining_quota(code)
+    return {
+        "valid": True,
+        "remaining_quota": remaining,
+        "daily_limit": 50
+    }
+
 
 @app.get("/api/health")
 async def health_check():
@@ -195,23 +213,37 @@ async def upload_file(file: UploadFile = File(...)):
 async def generate_speech(request: GenerateRequest):
     """
     Generate speech for word list.
-    
+
     This is the main endpoint that:
-    1. Parses the word list
-    2. Generates speech for each word via ListenHub
-    3. Concatenates audio with repeat and interval settings
-    4. Saves to history
+    1. Validates invite code and checks quota
+    2. Parses the word list
+    3. Generates speech for each word via ListenHub
+    4. Concatenates audio with repeat and interval settings
+    5. Records usage and saves to history
     """
+    # Validate invite code
+    is_valid, error_msg = invite_code_manager.validate_code(request.invite_code)
+    if not is_valid:
+        raise HTTPException(status_code=403, detail=error_msg)
+
     # Parse words
     words, language = parse_word_list(request.text)
     validation = validate_word_list(words)
-    
+
     if validation["is_empty"]:
         return GenerateResponse(
             success=False,
             message="请输入至少一个单词或词语"
         )
-    
+
+    # Check remaining quota
+    remaining = invite_code_manager.get_remaining_quota(request.invite_code)
+    if len(words) > remaining:
+        raise HTTPException(
+            status_code=403,
+            detail=f"今日剩余额度不足。剩余：{remaining}个单词，需要：{len(words)}个单词"
+        )
+
     # Check for large file warning
     if validation["is_large"] and not request.confirmed:
         return GenerateResponse(
@@ -276,7 +308,10 @@ async def generate_speech(request: GenerateRequest):
     
     # Get just the filename for the response
     audio_filename = os.path.basename(final_audio)
-    
+
+    # Record invite code usage
+    invite_code_manager.record_usage(request.invite_code, len(words))
+
     # Save to history
     history_service.add_record(
         words=words,

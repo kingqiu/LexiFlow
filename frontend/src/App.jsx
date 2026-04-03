@@ -5,10 +5,15 @@ import AudioPlayer from './components/AudioPlayer';
 import ShareModal from './components/ShareModal';
 import WordBook from './components/WordBook';
 import History from './components/History';
+import InviteCodeModal from './components/InviteCodeModal';
 
-const API_BASE = `http://${window.location.hostname}:8000/api`;
+const API_BASE = import.meta.env.VITE_API_BASE || `http://${window.location.hostname}:8000/api`;
 
 function App() {
+    // Invite code state
+    const [inviteCode, setInviteCode] = useState(null);
+    const [remainingQuota, setRemainingQuota] = useState(null);
+
     // Word list state
     const [text, setText] = useState('');
     const [words, setWords] = useState([]);
@@ -249,6 +254,11 @@ function App() {
             return;
         }
 
+        if (!inviteCode) {
+            setError('请先输入邀请码');
+            return;
+        }
+
         setError(null);
         setIsGenerating(true);
         setGeneratedAudio(null);
@@ -265,6 +275,7 @@ function App() {
                     repeat_count: repeatCount,
                     interval_seconds: intervalSeconds,
                     confirmed: confirmed,
+                    invite_code: inviteCode,
                 }),
             });
 
@@ -290,6 +301,10 @@ function App() {
                     message: data.message,
                 });
                 fetchHistory(); // Refresh history
+                // Update remaining quota
+                if (remainingQuota !== null) {
+                    setRemainingQuota(Math.max(0, remainingQuota - data.word_count));
+                }
             } else {
                 setError(data.message || '生成失败');
             }
@@ -332,6 +347,16 @@ function App() {
 
     return (
         <div className="app">
+            {/* Invite Code Modal */}
+            {!inviteCode && (
+                <InviteCodeModal
+                    onCodeValidated={(code, quota) => {
+                        setInviteCode(code);
+                        setRemainingQuota(quota);
+                    }}
+                />
+            )}
+
             {/* Header */}
             <header className="header">
                 <h1>
@@ -340,6 +365,19 @@ function App() {
                     Flow
                 </h1>
                 <p>万物皆可听，一键生成听写音频</p>
+                {inviteCode && remainingQuota !== null && (
+                    <div style={{
+                        marginTop: '8px',
+                        fontSize: '14px',
+                        color: '#666',
+                        backgroundColor: '#f0f9ff',
+                        padding: '8px 16px',
+                        borderRadius: '8px',
+                        display: 'inline-block'
+                    }}>
+                        今日剩余额度：<strong style={{ color: '#2563eb' }}>{remainingQuota}</strong> 个单词
+                    </div>
+                )}
             </header>
 
             {/* Main Content */}
