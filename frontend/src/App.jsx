@@ -71,7 +71,9 @@ function App() {
 
     const fetchHistory = async () => {
         try {
-            const response = await fetch(`${API_BASE}/history`);
+            const code = inviteCode || localStorage.getItem('invite_code') || '';
+            const url = code ? `${API_BASE}/history?invite_code=${encodeURIComponent(code)}` : `${API_BASE}/history`;
+            const response = await fetch(url);
             const data = await response.json();
             setHistory(data.records || []);
         } catch (err) {
@@ -323,7 +325,11 @@ function App() {
 
     const handleDeleteHistory = async (recordId) => {
         try {
-            await fetch(`${API_BASE}/history/${recordId}`, { method: 'DELETE' });
+            const code = inviteCode || localStorage.getItem('invite_code') || '';
+            const url = code
+                ? `${API_BASE}/history/${recordId}?invite_code=${encodeURIComponent(code)}`
+                : `${API_BASE}/history/${recordId}`;
+            await fetch(url, { method: 'DELETE' });
             fetchHistory();
         } catch (err) {
             console.error('Failed to delete history:', err);

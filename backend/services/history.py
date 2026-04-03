@@ -51,16 +51,17 @@ class HistoryService:
         audio_filename: str,
         success_count: int,
         failed_count: int,
-        failed_words: List[str]
+        failed_words: List[str],
+        invite_code: str = ""
     ) -> Dict:
         """
         Add a new generation record.
-        
+
         Returns:
             The created record
         """
         history = self._load_history()
-        
+
         record = {
             "id": uuid.uuid4().hex,
             "timestamp": datetime.now().isoformat(),
@@ -73,23 +74,26 @@ class HistoryService:
             "audio_filename": audio_filename,
             "success_count": success_count,
             "failed_count": failed_count,
-            "failed_words": failed_words
+            "failed_words": failed_words,
+            "invite_code": invite_code
         }
-        
+
         history.insert(0, record)  # Add to beginning (newest first)
-        
+
         # Keep only last 100 records
         if len(history) > 100:
             history = history[:100]
-        
+
         self._save_history(history)
         return record
-    
-    def get_records(self, limit: int = 20) -> List[Dict]:
-        """Get recent history records."""
+
+    def get_records(self, limit: int = 20, invite_code: str = "") -> List[Dict]:
+        """Get recent history records, filtered by invite_code if provided."""
         history = self._load_history()
+        if invite_code:
+            history = [r for r in history if r.get("invite_code") == invite_code]
         return history[:limit]
-    
+
     def get_record_by_id(self, record_id: int) -> Optional[Dict]:
         """Get a specific record by ID."""
         history = self._load_history()
@@ -97,13 +101,16 @@ class HistoryService:
             if record.get("id") == record_id:
                 return record
         return None
-    
-    def delete_record(self, record_id: int) -> bool:
-        """Delete a record by ID."""
+
+    def delete_record(self, record_id: str, invite_code: str = "") -> bool:
+        """Delete a record by ID, only if invite_code matches."""
         history = self._load_history()
         original_len = len(history)
-        history = [r for r in history if r.get("id") != record_id]
-        
+        if invite_code:
+            history = [r for r in history if not (r.get("id") == record_id and r.get("invite_code") == invite_code)]
+        else:
+            history = [r for r in history if r.get("id") != record_id]
+
         if len(history) < original_len:
             self._save_history(history)
             return True

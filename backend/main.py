@@ -322,7 +322,8 @@ async def generate_speech(request: GenerateRequest):
         audio_filename=audio_filename,
         success_count=success_count,
         failed_count=failed_count,
-        failed_words=failed_words
+        failed_words=failed_words,
+        invite_code=request.invite_code
     )
     
     return GenerateResponse(
@@ -360,16 +361,16 @@ async def get_audio(filename: str, download: int = 0):
 
 
 @app.get("/api/history")
-async def get_history(limit: int = 20):
+async def get_history(limit: int = 20, invite_code: str = ""):
     """Get generation history."""
-    records = history_service.get_records(limit)
+    records = history_service.get_records(limit, invite_code=invite_code)
     return {"records": records}
 
 
 @app.delete("/api/history/{record_id}")
-async def delete_history_record(record_id: int):
+async def delete_history_record(record_id: str, invite_code: str = ""):
     """Delete a history record."""
-    success = history_service.delete_record(record_id)
+    success = history_service.delete_record(record_id, invite_code=invite_code)
     if not success:
         raise HTTPException(status_code=404, detail="Record not found")
     return {"success": True}
