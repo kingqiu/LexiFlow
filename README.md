@@ -123,6 +123,28 @@ LexiFlow/
 4. **生成音频** - 点击生成按钮，等待处理完成
 5. **下载音频** - 试听满意后点击下载按钮保存 MP3 文件
 
+## 🔧 管理命令
+
+### 查看邀请码使用统计
+
+```bash
+cd backend
+python stats.py
+```
+
+显示内容：
+- 每个邀请码的使用情况（分配对象、绑定设备、使用量）
+- 每日使用明细（最近7天）
+- 生成失败记录
+- 总体统计数据
+
+### 生成新的邀请码
+
+```bash
+cd backend
+python generate_codes.py
+```
+
 ## 📄 License
 
 MIT License

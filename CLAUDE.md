@@ -45,6 +45,15 @@ cd backend && pip install -r requirements.txt
 cd frontend && npm install
 ```
 
+### 管理命令
+```bash
+# 查看邀请码使用统计（重要！）
+cd backend && python stats.py
+
+# 生成新的邀请码
+cd backend && python generate_codes.py
+```
+
 ## 架构要点
 
 ### 后端服务层 (backend/services/)
