@@ -404,24 +404,14 @@ function App() {
             {/* Header */}
             <header className="header">
                 <h1>
-                    <span style={{ color: '#f97316' }}>L</span>
-                    <span style={{ color: '#3b82f6' }}>exi</span>
-                    Flow
+                    <span className="accent-l">L</span>exi<span className="accent-e">F</span>low
                 </h1>
-                <p>万物皆可听，一键生成听写音频</p>
-                {inviteCode && remainingQuota !== null && (
-                    <div style={{
-                        marginTop: '8px',
-                        fontSize: '14px',
-                        color: '#666',
-                        backgroundColor: '#f0f9ff',
-                        padding: '8px 16px',
-                        borderRadius: '8px',
-                        display: 'inline-block'
-                    }}>
-                        今日剩余额度：<strong style={{ color: '#2563eb' }}>{remainingQuota}</strong> 个单词
-                    </div>
-                )}
+                <p className="header-tagline">万物皆可听，一键生成听写音频</p>
+                <div className="header-divider">
+                    <span className="header-divider-line"></span>
+                    <span className="header-divider-dot"></span>
+                    <span className="header-divider-line"></span>
+                </div>
             </header>
 
             {/* Main Content */}
@@ -435,6 +425,8 @@ function App() {
                     isLarge={isLarge}
                     warning={warning}
                     isExtracting={isExtracting}
+                    remainingQuota={remainingQuota}
+                    inviteCode={inviteCode}
                 />
 
                 <SettingsPanel
@@ -453,10 +445,10 @@ function App() {
                 {error && (
                     <div
                         className="status-message error"
-                        style={{ background: '#fee2e2', color: '#dc2626', border: '1px solid #fecaca', borderRadius: '12px', textAlign: 'center' }}
+                        style={{ textAlign: 'center' }}
                         role="alert"
                     >
-                        ❌ {error}
+                        {error}
                     </div>
                 )}
 

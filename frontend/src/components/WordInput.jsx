@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react';
 
-function WordInput({ text, onTextChange, onFileUpload, onImageExtract, wordCount, isLarge, warning, isExtracting }) {
+function WordInput({ text, onTextChange, onFileUpload, onImageExtract, wordCount, isLarge, warning, isExtracting, remainingQuota, inviteCode }) {
     const fileInputRef = useRef(null);
     const imageInputRef = useRef(null);
     const [isDragOver, setIsDragOver] = useState(false);
@@ -51,15 +51,28 @@ function WordInput({ text, onTextChange, onFileUpload, onImageExtract, wordCount
         if (file) {
             onImageExtract(file);
         }
-        // Reset input so the same file can be selected again
         e.target.value = '';
     };
 
     return (
-        <div className="word-input-section">
-            <h2 className="card-title">
-                📝 输入内容
-            </h2>
+        <div className="card">
+            <div className="word-input-header">
+                <h2 className="card-title">
+                    第一步：输入内容
+                </h2>
+                {inviteCode && remainingQuota !== null && (
+                    <div
+                        className="quota-badge"
+                        data-state={wordCount > remainingQuota ? 'over' : wordCount > 0 ? 'ok' : 'idle'}
+                    >
+                        {wordCount > 0
+                            ? wordCount > remainingQuota
+                                ? `⚠️ ${wordCount}/${remainingQuota}`
+                                : `${wordCount}/${remainingQuota}`
+                            : `剩余 ${remainingQuota}`}
+                    </div>
+                )}
+            </div>
 
             <div
                 className={`word-input-container ${isDragOver ? 'drag-over' : ''}`}
@@ -106,9 +119,8 @@ function WordInput({ text, onTextChange, onFileUpload, onImageExtract, wordCount
                 </div>
             </div>
 
-            {/* Warning */}
             {warning && (
-                <div className="status-message warning">
+                <div className="status-message warning" style={{ marginTop: '10px' }}>
                     ⚠️ {warning}
                 </div>
             )}

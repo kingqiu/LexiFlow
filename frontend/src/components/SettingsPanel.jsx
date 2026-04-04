@@ -18,7 +18,7 @@ function SettingsPanel({
     return (
         <div className="card settings-panel">
             <h2 className="card-title">
-                ⚙️ 生成设置
+                第二步：生成设置
             </h2>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '24px' }}>
@@ -39,8 +39,8 @@ function SettingsPanel({
                             </option>
                         ))}
                     </select>
-                    <p style={{ marginTop: '8px', fontSize: '0.75rem', color: '#64748b' }}>
-                        💡 系统将根据内容自动匹配地道的中/英文配音。
+                    <p style={{ marginTop: '8px', fontSize: '0.78rem', color: 'var(--color-text-muted)', fontStyle: 'italic' }}>
+                        系统将根据内容自动匹配地道的中/英文配音。
                     </p>
                 </div>
 
