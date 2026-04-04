@@ -30,6 +30,7 @@ function App() {
 
     // Generation state
     const [isGenerating, setIsGenerating] = useState(false);
+    const [isExtracting, setIsExtracting] = useState(false);
     const [generatedAudio, setGeneratedAudio] = useState(null);
     const [generationResult, setGenerationResult] = useState(null);
     const [error, setError] = useState(null);
@@ -250,6 +251,41 @@ function App() {
         }
     };
 
+    // Handle image upload for word extraction
+    const handleImageExtract = async (file) => {
+        setIsExtracting(true);
+        setError(null);
+
+        const formData = new FormData();
+        formData.append('file', file);
+
+        try {
+            const response = await fetch(`${API_BASE}/extract-words-from-image`, {
+                method: 'POST',
+                body: formData,
+            });
+
+            if (!response.ok) {
+                const errData = await response.json();
+                setError(errData.detail || '图片识别失败');
+                return;
+            }
+
+            const data = await response.json();
+            if (data.words && data.words.length > 0) {
+                const newText = text ? text.trimEnd() + '\n' + data.words.join('\n') : data.words.join('\n');
+                handleTextChange(newText);
+            } else {
+                setError('未能从图片中识别到单词，请换一张更清晰的图片');
+            }
+        } catch (err) {
+            setError('图片识别失败，请重试');
+            console.error('Image extract error:', err);
+        } finally {
+            setIsExtracting(false);
+        }
+    };
+
     // Generate speech with real-time streaming updates
     const handleGenerate = async (confirmed = false) => {
         if (!words.length) {
@@ -394,9 +430,11 @@ function App() {
                     text={text}
                     onTextChange={handleTextChange}
                     onFileUpload={handleFileUpload}
+                    onImageExtract={handleImageExtract}
                     wordCount={wordCount}
                     isLarge={isLarge}
                     warning={warning}
+                    isExtracting={isExtracting}
                 />
 
                 <SettingsPanel

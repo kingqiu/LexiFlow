@@ -1,7 +1,8 @@
 import React, { useRef, useState } from 'react';
 
-function WordInput({ text, onTextChange, onFileUpload, wordCount, isLarge, warning }) {
+function WordInput({ text, onTextChange, onFileUpload, onImageExtract, wordCount, isLarge, warning, isExtracting }) {
     const fileInputRef = useRef(null);
+    const imageInputRef = useRef(null);
     const [isDragOver, setIsDragOver] = useState(false);
 
     const handleDragOver = (e) => {
@@ -41,6 +42,19 @@ function WordInput({ text, onTextChange, onFileUpload, wordCount, isLarge, warni
         }
     };
 
+    const handleImageClick = () => {
+        imageInputRef.current?.click();
+    };
+
+    const handleImageChange = (e) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            onImageExtract(file);
+        }
+        // Reset input so the same file can be selected again
+        e.target.value = '';
+    };
+
     return (
         <div className="word-input-section">
             <h2 className="card-title">
@@ -65,6 +79,17 @@ function WordInput({ text, onTextChange, onFileUpload, wordCount, isLarge, warni
                 />
 
                 <div className="input-bottom-bar">
+                    <div className={`file-upload-mini ${isExtracting ? 'extracting' : ''}`} onClick={!isExtracting ? handleImageClick : undefined}>
+                        <input
+                            type="file"
+                            ref={imageInputRef}
+                            onChange={handleImageChange}
+                            accept="image/*"
+                            capture="environment"
+                        />
+                        <span>{isExtracting ? '⏳ 识别中...' : '📷 拍照识字'}</span>
+                    </div>
+
                     <div className="file-upload-mini" onClick={handleFileClick}>
                         <input
                             type="file"

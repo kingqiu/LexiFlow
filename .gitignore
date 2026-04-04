@@ -28,6 +28,8 @@ backend/data/audio/*
 backend/data/history.json
 backend/data/wordbooks.json
 backend/data/shares.json
+backend/data/invite_codes.json
+backend/data/usage_log.jsonl
 OutputAudios/*
 !OutputAudios/.gitkeep
 

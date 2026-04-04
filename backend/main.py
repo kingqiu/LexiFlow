@@ -5,6 +5,8 @@ REST API for word-to-speech generation with ListenHub integration.
 import os
 import socket
 import tempfile
+import base64
+import httpx
 from pathlib import Path
 from typing import List, Optional
 from urllib.parse import urlparse
@@ -570,6 +572,79 @@ async def share_page(share_id: str, req: Request):
         word_count=share.get("word_count", 0),
     )
     return HTMLResponse(content=html)
+
+
+# === Image Word Extraction ===
+
+@app.post("/api/extract-words-from-image")
+async def extract_words_from_image(file: UploadFile = File(...)):
+    """
+    Extract words from an uploaded image using Gemini Vision API.
+    Accepts JPEG, PNG, GIF, WebP images.
+    Returns a list of extracted words.
+    """
+    gemini_key = os.getenv("GEMINI_API_KEY")
+    if not gemini_key:
+        raise HTTPException(status_code=500, detail="Gemini API Key 未配置")
+
+    # Validate file type
+    if not file.content_type or not file.content_type.startswith("image/"):
+        raise HTTPException(status_code=400, detail="请上传图片文件（JPEG、PNG、GIF、WebP）")
+
+    # Read and encode image
+    image_data = await file.read()
+    if len(image_data) > 20 * 1024 * 1024:
+        raise HTTPException(status_code=400, detail="图片大小不能超过 20MB")
+
+    image_base64 = base64.b64encode(image_data).decode("utf-8")
+    mime_type = file.content_type
+
+    # Call Gemini API
+    prompt = (
+        "这是一张课本或练习册的照片。请提取其中所有需要学习的词语或单词，"
+        "每行一个，不要包含序号、例句、翻译、音标、页码或其他说明文字。"
+        "只输出词语本身，每行一个。"
+    )
+
+    payload = {
+        "contents": [{
+            "parts": [
+                {"text": prompt},
+                {
+                    "inline_data": {
+                        "mime_type": mime_type,
+                        "data": image_base64
+                    }
+                }
+            ]
+        }]
+    }
+
+    try:
+        async with httpx.AsyncClient(timeout=30) as client:
+            resp = await client.post(
+                f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={gemini_key}",
+                json=payload
+            )
+
+        if resp.status_code != 200:
+            error_detail = resp.json().get("error", {}).get("message", "未知错误")
+            raise HTTPException(status_code=502, detail=f"Gemini API 调用失败：{error_detail}")
+
+        result = resp.json()
+        text = result["candidates"][0]["content"]["parts"][0]["text"]
+
+        # Parse: one word per line, strip whitespace, filter empty
+        words = [w.strip() for w in text.strip().split("\n") if w.strip()]
+
+        return {"words": words, "word_count": len(words)}
+
+    except httpx.TimeoutException:
+        raise HTTPException(status_code=504, detail="图片识别超时，请重试")
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"图片识别失败：{str(e)}")
 
 
 # === Run Server ===
