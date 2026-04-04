@@ -179,10 +179,14 @@ body {
 .input-bottom-bar {
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    gap: 10px;
     padding: 12px 20px;
     background: #fcfcfc;
     border-top: 1px solid #f3f4f6;
+}
+
+.input-bottom-bar .word-count {
+    margin-left: auto;
 }
 
 .file-upload-mini {
