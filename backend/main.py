@@ -534,7 +534,12 @@ async def share_page(share_id: str, req: Request):
     # Build the page content
     content = f"""
     <div class="share-brand">
-        <h1>🎧 LexiFlow</h1>
+        <h1><span class="accent-l">L</span>exi<span class="accent-e">F</span>low</h1>
+        <div class="share-brand-divider">
+            <span class="share-brand-line"></span>
+            <span class="share-brand-dot"></span>
+            <span class="share-brand-line"></span>
+        </div>
         <p>听写音频分享</p>
     </div>
 
@@ -546,7 +551,7 @@ async def share_page(share_id: str, req: Request):
     </div>
 
     <div class="word-list">
-        <div class="word-list-title">单词列表</div>
+        <div class="word-list-title">📖 单词列表</div>
         <div class="word-tags">{word_tags}</div>
     </div>
 

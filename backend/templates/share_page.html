@@ -5,7 +5,38 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>LexiFlow 听写音频</title>
     <meta name="description" content="LexiFlow 生成的听写音频，包含 {word_count} 个单词">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
+        :root {{
+            --color-paper: #faf8f5;
+            --color-paper-warm: #fffdf9;
+            --color-olive: #3a8055;
+            --color-olive-light: #4a9e69;
+            --color-olive-pale: #edf5f0;
+            --color-terracotta: #d4541a;
+            --color-terracotta-pale: #fdf0eb;
+            --color-ink: #2c2420;
+            --color-ink-light: #4a4039;
+            --color-text-secondary: #6b5f54;
+            --color-text-muted: #9c8e82;
+            --color-border: #e0d8cf;
+            --color-border-light: #ece7e0;
+            --color-gridline: rgba(61, 128, 85, 0.06);
+            --font-display: 'Cormorant Garamond', Georgia, serif;
+            --font-body: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            --font-mono: 'DM Mono', 'SF Mono', monospace;
+            --radius-sm: 6px;
+            --radius-md: 10px;
+            --radius-lg: 16px;
+            --radius-xl: 24px;
+            --radius-pill: 999px;
+            --shadow-sm: 0 1px 3px rgba(44, 36, 32, 0.06), 0 1px 2px rgba(44, 36, 32, 0.04);
+            --shadow-md: 0 4px 12px rgba(44, 36, 32, 0.08), 0 2px 4px rgba(44, 36, 32, 0.04);
+            --shadow-lg: 0 8px 24px rgba(44, 36, 32, 0.10), 0 4px 8px rgba(44, 36, 32, 0.06);
+        }}
+
         * {{
             margin: 0;
             padding: 0;
@@ -13,59 +44,97 @@
         }}
 
         body {{
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: var(--font-body);
+            background-color: var(--color-paper);
+            background-image:
+                linear-gradient(var(--color-gridline) 1px, transparent 1px),
+                linear-gradient(90deg, var(--color-gridline) 1px, transparent 1px);
+            background-size: 28px 28px;
+            color: var(--color-ink);
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 20px;
+            padding: 24px 16px;
+            -webkit-font-smoothing: antialiased;
         }}
 
         .share-container {{
-            background: white;
-            border-radius: 24px;
+            background: var(--color-paper-warm);
+            border: 1px solid var(--color-border-light);
+            border-radius: var(--radius-xl);
             max-width: 480px;
             width: 100%;
-            padding: 40px 32px;
-            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+            padding: 36px 32px;
+            box-shadow: var(--shadow-lg);
+            animation: fadeSlideUp 0.5s ease-out both;
+        }}
+
+        @keyframes fadeSlideUp {{
+            from {{ opacity: 0; transform: translateY(16px); }}
+            to {{ opacity: 1; transform: translateY(0); }}
         }}
 
         .share-brand {{
             text-align: center;
-            margin-bottom: 32px;
+            margin-bottom: 28px;
         }}
 
         .share-brand h1 {{
-            font-size: 1.6rem;
-            font-weight: 800;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            margin-bottom: 4px;
+            font-family: var(--font-display);
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--color-ink);
+            margin-bottom: 6px;
+            letter-spacing: -0.02em;
+        }}
+
+        .share-brand h1 .accent-l {{ color: var(--color-terracotta); }}
+        .share-brand h1 .accent-e {{ color: var(--color-olive); }}
+
+        .share-brand-divider {{
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 12px;
+        }}
+
+        .share-brand-line {{
+            width: 36px;
+            height: 1px;
+            background: var(--color-border);
+        }}
+
+        .share-brand-dot {{
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: var(--color-terracotta);
         }}
 
         .share-brand p {{
-            color: #94a3b8;
-            font-size: 0.85rem;
+            font-family: var(--font-display);
+            font-style: italic;
+            color: var(--color-text-secondary);
+            font-size: 0.95rem;
+            margin-top: 10px;
         }}
 
         .audio-section {{
-            background: #f8fafc;
-            border-radius: 16px;
-            padding: 24px;
+            background: var(--color-paper);
+            border: 1px solid var(--color-border-light);
+            border-radius: var(--radius-lg);
+            padding: 20px;
             margin-bottom: 24px;
+            border-left: 4px solid var(--color-olive);
         }}
 
         .audio-section audio {{
             width: 100%;
-            border-radius: 12px;
+            height: 44px;
+            border-radius: var(--radius-pill);
             outline: none;
-        }}
-
-        .audio-section audio::-webkit-media-controls-panel {{
-            background: #f1f5f9;
         }}
 
         .word-list {{
@@ -73,12 +142,22 @@
         }}
 
         .word-list-title {{
-            font-size: 0.8rem;
-            font-weight: 600;
-            color: #94a3b8;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 12px;
+            font-family: var(--font-display);
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--color-ink);
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }}
+
+        .word-list-title::after {{
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: linear-gradient(to right, var(--color-border), transparent);
+            margin-left: 8px;
         }}
 
         .word-tags {{
@@ -89,26 +168,36 @@
 
         .word-tag {{
             display: inline-block;
-            padding: 6px 14px;
-            background: #f1f5f9;
-            border-radius: 100px;
-            font-size: 0.9rem;
-            font-weight: 500;
-            color: #334155;
-            transition: background 0.2s;
+            padding: 5px 12px;
+            background: var(--color-olive-pale);
+            border: 1px solid rgba(58, 128, 85, 0.2);
+            border-radius: var(--radius-sm);
+            font-family: var(--font-body);
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--color-ink-light);
+            transition: background 0.15s ease, transform 0.1s ease;
+            transform: rotate(-0.3deg);
         }}
 
+        .word-tag:nth-child(even) {{ transform: rotate(0.3deg); }}
+        .word-tag:nth-child(3n) {{ transform: rotate(-0.5deg); background: var(--color-terracotta-pale); border-color: rgba(212, 84, 26, 0.2); }}
+
         .word-tag:hover {{
-            background: #e2e8f0;
+            transform: rotate(0deg) scale(1.04);
+            background: var(--color-olive);
+            color: white;
+            border-color: var(--color-olive);
         }}
 
         .meta-info {{
             display: flex;
             align-items: center;
             gap: 8px;
-            font-size: 0.8rem;
-            color: #94a3b8;
-            margin-bottom: 28px;
+            font-family: var(--font-mono);
+            font-size: 0.78rem;
+            color: var(--color-text-muted);
+            margin-bottom: 24px;
             flex-wrap: wrap;
         }}
 
@@ -116,67 +205,82 @@
             width: 3px;
             height: 3px;
             border-radius: 50%;
-            background: #cbd5e1;
+            background: var(--color-border);
         }}
 
         .actions {{
             display: flex;
-            gap: 12px;
+            gap: 10px;
         }}
 
         .btn {{
             flex: 1;
-            padding: 14px;
-            border-radius: 14px;
-            font-size: 0.95rem;
-            font-weight: 600;
+            padding: 13px 16px;
+            border-radius: var(--radius-pill);
+            font-family: var(--font-body);
+            font-size: 0.9rem;
+            font-weight: 700;
             text-align: center;
             text-decoration: none;
             cursor: pointer;
             border: none;
-            transition: all 0.2s;
-            font-family: inherit;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
         }}
 
         .btn-primary {{
-            background: linear-gradient(135deg, #667eea, #764ba2);
+            background: var(--color-olive);
             color: white;
+            box-shadow: 0 2px 8px rgba(61, 128, 85, 0.25), 0 1px 3px rgba(61, 128, 85, 0.15);
         }}
 
         .btn-primary:hover {{
+            background: var(--color-olive-light);
             transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 4px 14px rgba(61, 128, 85, 0.3);
+        }}
+
+        .btn-primary:active {{
+            transform: translateY(0) scale(0.98);
         }}
 
         .btn-secondary {{
-            background: #f1f5f9;
-            color: #475569;
+            background: var(--color-paper);
+            color: var(--color-ink);
+            border: 1.5px solid var(--color-border);
         }}
 
         .btn-secondary:hover {{
-            background: #e2e8f0;
+            background: var(--color-olive-pale);
+            border-color: var(--color-olive);
+            color: var(--color-olive);
+            transform: translateY(-1px);
         }}
 
         .footer {{
             text-align: center;
-            margin-top: 28px;
-            padding-top: 20px;
-            border-top: 1px solid #f1f5f9;
+            margin-top: 24px;
+            padding-top: 18px;
+            border-top: 1px solid var(--color-border-light);
         }}
 
         .footer p {{
             font-size: 0.75rem;
-            color: #cbd5e1;
+            color: var(--color-text-muted);
         }}
 
         .footer a {{
-            color: #667eea;
+            color: var(--color-olive);
             text-decoration: none;
+            font-weight: 600;
         }}
 
         .expired-container {{
             text-align: center;
-            padding: 60px 32px;
+            padding: 48px 24px;
         }}
 
         .expired-container .icon {{
@@ -185,14 +289,30 @@
         }}
 
         .expired-container h2 {{
-            font-size: 1.3rem;
-            color: #334155;
+            font-family: var(--font-display);
+            font-size: 1.4rem;
+            color: var(--color-ink);
             margin-bottom: 8px;
         }}
 
         .expired-container p {{
-            color: #94a3b8;
-            font-size: 0.95rem;
+            color: var(--color-text-secondary);
+            font-size: 0.9rem;
+        }}
+
+        /* ===== Scrollbar ===== */
+        ::-webkit-scrollbar {{ width: 5px; }}
+        ::-webkit-scrollbar-track {{ background: var(--color-paper); }}
+        ::-webkit-scrollbar-thumb {{ background: var(--color-border); border-radius: 3px; }}
+
+        /* ===== Text Selection ===== */
+        ::selection {{ background: var(--color-olive-pale); color: var(--color-olive); }}
+
+        @media (max-width: 480px) {{
+            .share-container {{ padding: 28px 20px; }}
+            .share-brand h1 {{ font-size: 1.5rem; }}
+            .actions {{ flex-direction: column; }}
+            .btn {{ justify-content: center; }}
         }}
     </style>
 </head>
