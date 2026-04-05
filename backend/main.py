@@ -81,17 +81,20 @@ class WordBookCreate(BaseModel):
     name: str
     words: List[str] = []
     description: str = ""
+    invite_code: str = ""
 
 
 class WordBookUpdate(BaseModel):
     name: Optional[str] = None
     words: Optional[List[str]] = None
     description: Optional[str] = None
+    invite_code: str = ""
 
 
 class WordBookWordsAction(BaseModel):
     action: str  # "add" or "remove"
     words: List[str]
+    invite_code: str = ""
 
 
 class ShareCreate(BaseModel):
@@ -389,22 +392,23 @@ async def create_wordbook(request: WordBookCreate):
     book = wordbook_service.create_book(
         name=request.name.strip(),
         words=request.words,
-        description=request.description
+        description=request.description,
+        invite_code=request.invite_code
     )
     return book
 
 
 @app.get("/api/wordbooks")
-async def get_wordbooks():
-    """Get all word books."""
-    books = wordbook_service.get_books()
+async def get_wordbooks(invite_code: str = ""):
+    """Get word books, filtered by invite_code."""
+    books = wordbook_service.get_books(invite_code=invite_code)
     return {"books": books}
 
 
 @app.get("/api/wordbooks/{book_id}")
-async def get_wordbook(book_id: str):
+async def get_wordbook(book_id: str, invite_code: str = ""):
     """Get a specific word book."""
-    book = wordbook_service.get_book(book_id)
+    book = wordbook_service.get_book(book_id, invite_code=invite_code)
     if not book:
         raise HTTPException(status_code=404, detail="单词本未找到")
     return book
@@ -417,7 +421,8 @@ async def update_wordbook(book_id: str, request: WordBookUpdate):
         book_id=book_id,
         name=request.name,
         words=request.words,
-        description=request.description
+        description=request.description,
+        invite_code=request.invite_code
     )
     if not book:
         raise HTTPException(status_code=404, detail="单词本未找到")
@@ -425,9 +430,9 @@ async def update_wordbook(book_id: str, request: WordBookUpdate):
 
 
 @app.delete("/api/wordbooks/{book_id}")
-async def delete_wordbook(book_id: str):
+async def delete_wordbook(book_id: str, invite_code: str = ""):
     """Delete a word book."""
-    success = wordbook_service.delete_book(book_id)
+    success = wordbook_service.delete_book(book_id, invite_code=invite_code)
     if not success:
         raise HTTPException(status_code=404, detail="单词本未找到")
     return {"success": True}
@@ -437,9 +442,9 @@ async def delete_wordbook(book_id: str):
 async def modify_wordbook_words(book_id: str, request: WordBookWordsAction):
     """Add or remove words from a word book."""
     if request.action == "add":
-        book = wordbook_service.add_words(book_id, request.words)
+        book = wordbook_service.add_words(book_id, request.words, invite_code=request.invite_code)
     elif request.action == "remove":
-        book = wordbook_service.remove_words(book_id, request.words)
+        book = wordbook_service.remove_words(book_id, request.words, invite_code=request.invite_code)
     else:
         raise HTTPException(status_code=400, detail="action 必须为 'add' 或 'remove'")
     

@@ -86,7 +86,9 @@ function App() {
     // Word Book API methods
     const fetchWordBooks = async () => {
         try {
-            const response = await fetch(`${API_BASE}/wordbooks`);
+            const code = inviteCode || localStorage.getItem('invite_code') || '';
+            const url = code ? `${API_BASE}/wordbooks?invite_code=${encodeURIComponent(code)}` : `${API_BASE}/wordbooks`;
+            const response = await fetch(url);
             const data = await response.json();
             setWordbooks(data.books || []);
         } catch (err) {
@@ -96,10 +98,11 @@ function App() {
 
     const handleCreateWordBook = async (name) => {
         try {
+            const code = inviteCode || localStorage.getItem('invite_code') || '';
             await fetch(`${API_BASE}/wordbooks`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name }),
+                body: JSON.stringify({ name, invite_code: code }),
             });
             fetchWordBooks();
         } catch (err) {
@@ -109,7 +112,11 @@ function App() {
 
     const handleDeleteWordBook = async (bookId) => {
         try {
-            await fetch(`${API_BASE}/wordbooks/${bookId}`, { method: 'DELETE' });
+            const code = inviteCode || localStorage.getItem('invite_code') || '';
+            const url = code
+                ? `${API_BASE}/wordbooks/${bookId}?invite_code=${encodeURIComponent(code)}`
+                : `${API_BASE}/wordbooks/${bookId}`;
+            await fetch(url, { method: 'DELETE' });
             fetchWordBooks();
         } catch (err) {
             console.error('Failed to delete wordbook:', err);
@@ -118,10 +125,11 @@ function App() {
 
     const handleUpdateWordBook = async (bookId, updates) => {
         try {
+            const code = inviteCode || localStorage.getItem('invite_code') || '';
             await fetch(`${API_BASE}/wordbooks/${bookId}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(updates),
+                body: JSON.stringify({ ...updates, invite_code: code }),
             });
             fetchWordBooks();
         } catch (err) {
@@ -137,10 +145,11 @@ function App() {
 
     const handleSaveToWordBook = async (bookId, words) => {
         try {
+            const code = inviteCode || localStorage.getItem('invite_code') || '';
             await fetch(`${API_BASE}/wordbooks/${bookId}/words`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action: 'add', words }),
+                body: JSON.stringify({ action: 'add', words, invite_code: code }),
             });
             fetchWordBooks();
             setShowSaveToBookModal(false);
@@ -152,10 +161,11 @@ function App() {
 
     const handleSaveToNewBook = async (bookName, words) => {
         try {
+            const code = inviteCode || localStorage.getItem('invite_code') || '';
             await fetch(`${API_BASE}/wordbooks`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name: bookName, words }),
+                body: JSON.stringify({ name: bookName, words, invite_code: code }),
             });
             fetchWordBooks();
             setShowSaveToBookModal(false);
