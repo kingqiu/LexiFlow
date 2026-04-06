@@ -23,6 +23,7 @@ from services.history import history_service
 from services.wordbook import wordbook_service
 from services.share import share_service
 from services.invite_code import invite_code_manager
+from services.user_tracker import user_tracker
 from utils.text_parser import parse_word_list, validate_word_list
 
 load_dotenv()
@@ -108,12 +109,18 @@ class ShareCreate(BaseModel):
 # === API Endpoints ===
 
 @app.post("/api/validate-invite-code")
-async def validate_invite_code(code: str = Form(...), device_id: str = Form(None)):
+async def validate_invite_code(request: Request, code: str = Form(...), device_id: str = Form(None)):
     """Validate an invite code and return remaining quota"""
     is_valid, error_msg = invite_code_manager.validate_code(code, device_id=device_id)
 
     if not is_valid:
         raise HTTPException(status_code=400, detail=error_msg)
+
+    # Track login event and record first login info
+    user_tracker.log_event(code, "login", request)
+    is_first = user_tracker.record_first_login(code, request, invite_code_manager.codes_data)
+    if is_first:
+        invite_code_manager._save_codes(invite_code_manager.codes_data)
 
     remaining = invite_code_manager.get_remaining_quota(code)
     return {
@@ -216,7 +223,7 @@ async def upload_file(file: UploadFile = File(...)):
 
 
 @app.post("/api/generate", response_model=GenerateResponse)
-async def generate_speech(request: GenerateRequest):
+async def generate_speech(request: GenerateRequest, raw_request: Request):
     """
     Generate speech for word list.
 
@@ -318,6 +325,14 @@ async def generate_speech(request: GenerateRequest):
     # Record invite code usage
     invite_code_manager.record_usage(request.invite_code, len(words))
 
+    # Track generate event
+    user_tracker.log_event(request.invite_code, "generate", raw_request, details={
+        "word_count": len(words),
+        "speaker_name": request.speaker_name,
+        "repeat_count": request.repeat_count,
+        "audio_filename": audio_filename,
+    })
+
     # Save to history
     history_service.add_record(
         words=words,
@@ -346,12 +361,17 @@ async def generate_speech(request: GenerateRequest):
 
 
 @app.get("/api/audio/{filename}")
-async def get_audio(filename: str, download: int = 0):
+async def get_audio(filename: str, request: Request, download: int = 0, invite_code: str = ""):
     """Serve generated audio file. Use ?download=1 to force download."""
     file_path = AUDIO_DIR / filename
     
     if not file_path.exists():
         raise HTTPException(status_code=404, detail="Audio file not found")
+    
+    # Track playback or download event
+    event_type = "download" if download else "playback"
+    if invite_code:
+        user_tracker.log_event(invite_code, event_type, request, details={"filename": filename})
     
     disposition = "attachment" if download else "inline"
     
