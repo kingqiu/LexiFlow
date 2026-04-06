@@ -135,7 +135,7 @@ https://lexiflow-xxxx.vercel.app
 
 1. 打开 Vercel 给你的 URL
 2. 应该看到邀请码输入界面
-3. 输入一个邀请码（比如 `G-NR2UZA`）
+3. 输入一个邀请码
 4. 应该能进入主界面，看到 "今日剩余额度：50个单词"
 
 如果看到这个，说明前端部署成功了！✅
@@ -159,12 +159,9 @@ https://lexiflow-xxxx.vercel.app
 
 ---
 
-## 🎫 10个邀请码
+## 🎫 邀请码
 
-```
-G-NR2UZA    06GE5AGU    GQZBMBZT    HWASOEYG    6IBDD8YJ
-DPK1AVJV    MUHNYVRC    L1L8WN4B    8W2SI0OK    FUKYJG8E
-```
+邀请码通过 VPS 上的 `.env` 文件配置（`INVITE_CODES` 环境变量），不在代码仓库中存储。
 
 ---
 

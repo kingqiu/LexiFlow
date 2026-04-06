@@ -103,20 +103,7 @@ VITE_API_BASE=https://你的Railway域名.railway.app/api
 
 ## 邀请码
 
-已生成的邀请码（在 `backend/data/invite_codes.json`）：
-
-```
-G-NR2UZA
-06GE5AGU
-GQZBMBZT
-HWASOEYG
-6IBDD8YJ
-DPK1AVJV
-MUHNYVRC
-L1L8WN4B
-8W2SI0OK
-FUKYJG8E
-```
+邀请码通过 VPS 上的 `.env` 文件配置（`INVITE_CODES` 环境变量），不在代码仓库中存储。
 
 每个邀请码每天可生成 50 个单词。
 
