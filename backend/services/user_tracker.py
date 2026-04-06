@@ -95,8 +95,16 @@ def parse_user_agent(ua: str) -> Dict[str, str]:
         result["browser"] = "WeChat Mini Program"
     elif "DingTalk" in ua:
         result["browser"] = "DingTalk"
-    elif "Edg/" in ua:
-        edge_match = re.search(r"Edg/([\d\.]+)", ua)
+    elif "CriOS/" in ua:
+        # Chrome on iOS
+        crios_match = re.search(r"CriOS/([\d\.]+)", ua)
+        result["browser"] = "Chrome iOS " + (crios_match.group(1) if crios_match else "")
+    elif "FxiOS/" in ua:
+        # Firefox on iOS
+        fxios_match = re.search(r"FxiOS/([\d\.]+)", ua)
+        result["browser"] = "Firefox iOS " + (fxios_match.group(1) if fxios_match else "")
+    elif "Edg/" in ua or "EdgiOS/" in ua:
+        edge_match = re.search(r"(?:Edg|EdgiOS)/([\d\.]+)", ua)
         result["browser"] = "Edge " + (edge_match.group(1) if edge_match else "")
     elif "OPR/" in ua or "Opera" in ua:
         result["browser"] = "Opera"
